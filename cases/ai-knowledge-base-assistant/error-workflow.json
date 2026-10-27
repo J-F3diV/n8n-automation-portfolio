@@ -1,0 +1,65 @@
+{
+  "name": "Fiverr Demo - Dental Chatbot Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const e=$json.execution||{}; const w=$json.workflow||{}; return [{json:{timestamp:new Date().toISOString(),executionId:e.id||null,workflowId:w.id||null,workflowName:w.name||null,errorType:$json.error?.name||'WorkflowError',message:String($json.error?.message||'Unknown error').slice(0,200),containsChatText:false}}];"
+      },
+      "name": "Code - Sanitize Error Metadata",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "name": "No Op - Demo Log Sink",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        480,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code - Sanitize Error Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Sanitize Error Metadata": {
+      "main": [
+        [
+          {
+            "node": "No Op - Demo Log Sink",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "name": "FIVERR DEMO - Broken Order Workflow",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fiverr-demo-broken-order",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook - Order In",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -500,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const email=$json.body.customer.email.toLowerCase(); const total=$json.body.items.reduce((sum,item)=>sum+item.price*item.qty,0); return [{json:{email,total}}];"
+      },
+      "name": "Code - Process Order",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{status:'ok',...$json}}];"
+      },
+      "name": "Code - Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        60,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "name": "Respond - JSON",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        340,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook - Order In": {
+      "main": [
+        [
+          {
+            "node": "Code - Process Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Process Order": {
+      "main": [
+        [
+          {
+            "node": "Code - Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Result": {
+      "main": [
+        [
+          {
+            "node": "Respond - JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

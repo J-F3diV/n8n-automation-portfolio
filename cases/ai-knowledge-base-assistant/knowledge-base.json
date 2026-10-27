@@ -1,0 +1,50 @@
+{
+  "clinic": {
+    "name": "BrightSmile Dental Demo Clinic",
+    "fictional": true,
+    "timezone": "Europe/Berlin",
+    "kbVersion": "2026-10-13-demo"
+  },
+  "entries": [
+    {
+      "title": "Opening hours",
+      "content": "The clinic is open Monday to Friday from 08:00 to 18:00 and Saturday from 09:00 to 13:00. It is closed on Sundays and public holidays."
+    },
+    {
+      "title": "Location and transport",
+      "content": "The fictional demo clinic is at Demo Street 24, 10115 Berlin. The nearest station is Hauptbahnhof, about a 7-minute walk away. No real clinic exists at this demo address."
+    },
+    {
+      "title": "New patient appointment",
+      "content": "New patients can request an appointment through the website form or by calling the fictional reception number +49 30 000000. The chatbot does not confirm appointments; reception must confirm the date and time."
+    },
+    {
+      "title": "Routine examination",
+      "content": "A routine examination usually takes 30 minutes. It may include a discussion of concerns, an oral examination and, only when clinically indicated, an X-ray. Final treatment advice is given by a dentist."
+    },
+    {
+      "title": "Professional cleaning",
+      "content": "Professional dental cleaning is offered and usually takes 45 to 60 minutes. The demo price is EUR 95 to EUR 140 depending on the time required. Reception can provide a non-binding estimate."
+    },
+    {
+      "title": "Teeth whitening",
+      "content": "In-clinic whitening is available after a suitability check by a dentist. The fictional demo price starts at EUR 320. Whitening is not performed during pregnancy and may be unsuitable for untreated cavities or gum disease."
+    },
+    {
+      "title": "Insurance and payment",
+      "content": "The clinic accepts public and private German health insurance. Coverage depends on the insurer and treatment. Card and cash payments are accepted. Patients should ask reception or their insurer for a binding coverage decision."
+    },
+    {
+      "title": "Cancellation policy",
+      "content": "Appointments should be cancelled or rescheduled at least 24 hours in advance. A fictional demo late-cancellation fee of EUR 50 may apply. Reception reviews exceptions individually."
+    },
+    {
+      "title": "Dental emergencies",
+      "content": "For severe swelling, uncontrolled bleeding, facial trauma, difficulty breathing or a life-threatening situation, call emergency services at 112. For urgent dental pain during opening hours, contact reception. The chatbot cannot diagnose or provide emergency treatment."
+    },
+    {
+      "title": "Children and accessibility",
+      "content": "Children are welcome from age three. A parent or legal guardian must attend appointments for minors. The fictional clinic entrance and treatment rooms are wheelchair accessible; patients can tell reception about assistance needs."
+    }
+  ]
+}

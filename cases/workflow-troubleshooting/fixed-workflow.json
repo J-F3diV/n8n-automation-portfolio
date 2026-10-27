@@ -1,0 +1,97 @@
+{
+  "name": "FIVERR DEMO - Fixed Order Workflow",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fiverr-demo-fixed-order",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook - Order In",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -500,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body=$json.body ?? {}; const clean=v=>String(v??'').trim(); const email=clean(body.customer?.email).toLowerCase(); const items=Array.isArray(body.items)?body.items:[]; if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return [{json:{status:'rejected',reason:'invalid_email',orderId:clean(body.orderId)||'unknown'}}]; const normalized=items.map((item,index)=>({sku:clean(item?.sku)||'item-'+(index+1),price:Number(item?.price),qty:Number(item?.qty)})); if(!normalized.length||normalized.some(item=>!Number.isFinite(item.price)||item.price<0||!Number.isInteger(item.qty)||item.qty<1)) return [{json:{status:'rejected',reason:'invalid_items',orderId:clean(body.orderId)||'unknown'}}]; const total=normalized.reduce((sum,item)=>sum+item.price*item.qty,0); return [{json:{status:'accepted',orderId:clean(body.orderId)||'unknown',email,itemCount:normalized.length,total:Number(total.toFixed(2)),currency:'EUR'}}];"
+      },
+      "name": "Code - Process Order",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{...$json,workflowVersion:'fixed-demo-v1',independentDemo:true,syntheticData:true}}];"
+      },
+      "name": "Code - Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        60,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "name": "Respond - JSON",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        340,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook - Order In": {
+      "main": [
+        [
+          {
+            "node": "Code - Process Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Process Order": {
+      "main": [
+        [
+          {
+            "node": "Code - Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Result": {
+      "main": [
+        [
+          {
+            "node": "Respond - JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

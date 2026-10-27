@@ -1,0 +1,245 @@
+{
+  "name": "FIVERR DEMO - Webhook API Lead Routing",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fiverr-demo-lead-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook - Lead In",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const source=$json.body ?? $json; const clean=v=>String(v??'').replace(/[\\u0000-\\u001F\\u007F]/g,' ').replace(/\\s+/g,' ').trim(); const lead={leadId:clean(source.leadId),name:clean(source.name),email:clean(source.email).toLowerCase(),service:clean(source.service),budget:Number(source.budget||0),source:clean(source.source||'website')}; if(!lead.leadId||!lead.name||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(lead.email)||!lead.service) throw new Error('Invalid synthetic lead payload'); lead.priority=lead.budget>=1000?'high':lead.budget>=400?'normal':'low'; return [{json:{lead}}];"
+      },
+      "name": "Code - Validate Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-mock-api.example.com/enrich",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json.lead) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "HTTP - Enrich Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -300,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const original=$('Code - Validate Lead').item.json.lead; const enriched=$json; const crmRow={lead_id:original.leadId,name:original.name,email:original.email,service:original.service,budget_eur:original.budget,priority:original.priority,company_size:enriched.companySize,region:enriched.region,status:'new'}; const alert={channel:'sales-demo',text:'New '+original.priority+' priority lead: '+original.name+' — '+original.service+' — EUR '+original.budget,leadId:original.leadId}; return [{json:{crmRow,alert,enrichment:{companySize:enriched.companySize,region:enriched.region}}}];"
+      },
+      "name": "Code - Build CRM and Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-mock-api.example.com/crm",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json.crmRow) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "HTTP - Save CRM Row",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-mock-api.example.com/notify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($('Code - Build CRM and Alert').item.json.alert) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "HTTP - Send Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const built=$('Code - Build CRM and Alert').item.json; return [{json:{status:'processed',leadId:built.crmRow.lead_id,priority:built.crmRow.priority,crmSaved:true,notificationSent:true,independentDemo:true,syntheticData:true}}];"
+      },
+      "name": "Code - Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "name": "Respond - Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        720,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook - Lead In": {
+      "main": [
+        [
+          {
+            "node": "Code - Validate Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Validate Lead": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Enrich Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Enrich Lead": {
+      "main": [
+        [
+          {
+            "node": "Code - Build CRM and Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Build CRM and Alert": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Save CRM Row",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP - Send Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Save CRM Row": {
+      "main": [
+        [
+          {
+            "node": "Code - Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Send Alert": {
+      "main": [
+        [
+          {
+            "node": "Code - Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Result": {
+      "main": [
+        [
+          {
+            "node": "Respond - Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
