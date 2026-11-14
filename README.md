@@ -2,6 +2,22 @@
 
 Self-initiated demo projects built with n8n on synthetic data. Not client work.
 
+## 🚀 Live demo
+
+**[demo.wiquall.com](https://demo.wiquall.com)** — try the lead-routing workflow in your browser.
+
+A sample lead goes through a real n8n workflow: validation → enrichment → budget-based
+priority → storage → team notification. The dashboard shows the result immediately.
+
+- Success is reported only after storage and notification are both acknowledged
+- Idempotent: repeating the same lead does not create duplicates
+- Invalid input → HTTP 400; downstream failure → controlled HTTP 503
+- Isolated container without internet access, rate limiting, strict origin checks
+
+The demo uses synthetic data only; the CRM and notifications are demo stand-ins,
+not real integrations. The workflow is derived from
+[`cases/webhook-api-lead-routing`](cases/webhook-api-lead-routing).
+
 ## Cases
 
 | Case | Description | Files |
