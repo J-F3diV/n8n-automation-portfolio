@@ -22,7 +22,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const source=$json.body ?? $json; const clean=v=>String(v??'').replace(/[\\u0000-\\u001F\\u007F]/g,' ').replace(/\\s+/g,' ').trim(); const lead={leadId:clean(source.leadId),name:clean(source.name),email:clean(source.email).toLowerCase(),service:clean(source.service),budget:Number(source.budget||0),source:clean(source.source||'website')}; if(!lead.leadId||!lead.name||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(lead.email)||!lead.service) throw new Error('Invalid synthetic lead payload'); lead.priority=lead.budget>=1000?'high':lead.budget>=400?'normal':'low'; return [{json:{lead}}];"
+        "jsCode": "const source=$json.body ?? $json; const clean=v=>String(v??'').replace(/[\\u0000-\\u001F\\u007F]/g,' ').replace(/\\s+/g,' ').trim(); const lead={leadId:clean(source.leadId),name:clean(source.name),email:clean(source.email).toLowerCase(),service:clean(source.service),budget:Number(source.budget),source:clean(source.source||'website')}; if(!((typeof source.budget==='number')||(typeof source.budget==='string'&&/^\\d+(?:\\.\\d+)?$/.test(source.budget)))||!Number.isFinite(lead.budget)||lead.budget<0||lead.budget>1000000||!lead.leadId||!lead.name||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(lead.email)||!lead.service) return [{json:{status:'rejected',reason:'invalid_lead'}}]; lead.priority=lead.budget>=1000?'high':lead.budget>=400?'normal':'low'; return [{json:{lead}}];"
       },
       "name": "Code - Validate Lead",
       "type": "n8n-nodes-base.code",
@@ -133,7 +133,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const built=$('Code - Build CRM and Alert').item.json; return [{json:{status:'processed',leadId:built.crmRow.lead_id,priority:built.crmRow.priority,crmSaved:true,notificationSent:true,independentDemo:true,syntheticData:true}}];"
+        "jsCode": "const built=$('Code - Build CRM and Alert').item.json;\nconst crm=$('Code - Verify CRM').item.json;\nconst ack=$json;\nif(crm.crmSaved!==true||crm.leadId!==built.crmRow.lead_id||typeof crm.crmId!=='string'||!crm.crmId.trim()||ack.sent!==true||ack.leadId!==built.crmRow.lead_id||typeof ack.notificationId!=='string'||!ack.notificationId.trim())throw new Error('Side effect acknowledgement invalid');\nreturn [{json:{status:'processed',leadId:crm.leadId,priority:built.crmRow.priority,crmSaved:true,notificationSent:true,independentDemo:true,syntheticData:true}}];"
       },
       "name": "Code - Result",
       "type": "n8n-nodes-base.code",
@@ -156,6 +156,65 @@
         720,
         0
       ]
+    },
+    {
+      "name": "IF - Valid Lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -440,
+        160
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.status ?? \"valid\" }}",
+              "rightValue": "valid",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Respond - Rejected",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -200,
+        260
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "name": "Code - Verify CRM",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "const built=$('Code - Build CRM and Alert').item.json;\nconst ack=$json;\nif(ack.saved!==true||ack.leadId!==built.crmRow.lead_id||typeof ack.crmId!=='string'||!ack.crmId.trim())throw new Error('CRM acknowledgement invalid');\nreturn [{json:{crmSaved:true,leadId:ack.leadId,crmId:ack.crmId,alert:built.alert}}];"
+      }
     }
   ],
   "connections": {
@@ -174,7 +233,7 @@
       "main": [
         [
           {
-            "node": "HTTP - Enrich Lead",
+            "node": "IF - Valid Lead?",
             "type": "main",
             "index": 0
           }
@@ -199,11 +258,6 @@
             "node": "HTTP - Save CRM Row",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "HTTP - Send Alert",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -212,7 +266,7 @@
       "main": [
         [
           {
-            "node": "Code - Result",
+            "node": "Code - Verify CRM",
             "type": "main",
             "index": 0
           }
@@ -235,6 +289,35 @@
         [
           {
             "node": "Respond - Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Valid Lead?": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Enrich Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Verify CRM": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Send Alert",
             "type": "main",
             "index": 0
           }
