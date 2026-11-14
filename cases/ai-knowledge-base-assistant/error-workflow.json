@@ -13,7 +13,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const e=$json.execution||{}; const w=$json.workflow||{}; return [{json:{timestamp:new Date().toISOString(),executionId:e.id||null,workflowId:w.id||null,workflowName:w.name||null,errorType:$json.error?.name||'WorkflowError',message:String($json.error?.message||'Unknown error').slice(0,200),containsChatText:false}}];"
+        "jsCode": "const error=$json.execution?.error ?? $json.trigger?.error ?? $json.error; const allowed=new Set(['TimeoutError','NodeApiError','NodeOperationError','WorkflowActivationError']); const errorType=allowed.has(error?.name)?error.name:'WorkflowError'; return [{json:{timestamp:new Date().toISOString(),errorType}}];"
       },
       "name": "Code - Sanitize Error Metadata",
       "type": "n8n-nodes-base.code",
