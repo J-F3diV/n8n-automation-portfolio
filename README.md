@@ -1,5 +1,7 @@
 # n8n Automation Portfolio
 
+[![Regression tests](https://github.com/J-F3diV/n8n-automation-portfolio/actions/workflows/tests.yml/badge.svg)](https://github.com/J-F3diV/n8n-automation-portfolio/actions/workflows/tests.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Self-initiated synthetic demos, not client work or production deployments.
 
 ## 🚀 Live demo
@@ -33,7 +35,7 @@ In n8n use Workflows -> Import from File. All exports are inactive. Follow the c
 
 ## Reproducible local regression tests
 
-Requires Node.js 22+; verified locally with Node v26.13.0. No npm dependencies, credentials, AI, or external APIs are needed:
+Requires Node.js 22+; verified locally with Node v26.13.0 and in CI on Node 22 and 24. No npm dependencies, credentials, AI, or external APIs are needed:
 
 ```sh
 node --test tests/regression.test.cjs
